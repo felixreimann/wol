@@ -5,3 +5,7 @@ authors = ["Felix"]
 
 [dependencies]
 getopts = "0.2"
+
+[[bin]]
+doc = false
+name = "wakeonlan"
