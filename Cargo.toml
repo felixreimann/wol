@@ -1,0 +1,7 @@
+[package]
+name = "wol"
+version = "0.1.0"
+authors = ["Felix"]
+
+[dependencies]
+getopts = "0.2"
