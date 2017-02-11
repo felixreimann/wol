@@ -1,17 +1,6 @@
 use std::net::UdpSocket;
 use std::net::{Ipv6Addr, Ipv4Addr};
 use std::net::ToSocketAddrs;
-use std::fmt;
-
-struct Payload {
-    data: [u8; 102]
-}
-
-impl fmt::Debug for Payload {
-    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        self.data[..].fmt(formatter)
-    }
-}
 
 pub fn parse_mac(macstr: String) -> Result<Vec<u8>, &'static str> {
     let vec: Vec<u8> = macstr.split(':')
@@ -77,8 +66,8 @@ mod tests {
 
     #[test]
     fn test_create_payload() {
-        let payload = super::Payload { data : super::create_payload(vec![0x00, 0x01, 0x02, 0x03, 0x04, 0x05]) };
-        let result = super::Payload { data: [0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+        let payload = super::create_payload(vec![0x00, 0x01, 0x02, 0x03, 0x04, 0x05]);
+        let result = [0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
             0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
             0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
             0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
@@ -94,12 +83,9 @@ mod tests {
             0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
             0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
             0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
-            0x00, 0x01, 0x02, 0x03, 0x04, 0x05] };
-        assert_eq!(payload.data.len(), result.data.len());
-        println!("");
-        println!("payload {:?}", payload);
-        println!("result  {:?}", result);
-        assert!(payload.data.iter().zip(
-        result.data.iter()).all(|(a, b)| a == b));
+            0x00, 0x01, 0x02, 0x03, 0x04, 0x05];
+        assert_eq!(payload.len(), result.len());
+        assert!(payload.iter().zip(
+        result.iter()).all(|(a, b)| a == b));
     }
 }
