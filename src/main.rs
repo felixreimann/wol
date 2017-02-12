@@ -33,5 +33,9 @@ fn main() {
     }
     let macstr = matches.opt_str("mac").expect("no MAC address given");
     let mac: Vec<u8> = wol::parse_mac(macstr).expect("parse error");
-    wol::send_magic_packet_v6(mac).expect("Transmission error");
+    if matches.opt_present("4") {
+        wol::send_magic_packet_v4(mac).expect("Transmission error");
+    } else {
+        wol::send_magic_packet_v6(mac).expect("Transmission error");
+    }
 }
