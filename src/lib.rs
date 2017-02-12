@@ -1,4 +1,8 @@
-//! #The Rust Wake On LAN tool.
+//! Simple Wake On LAN tool.
+//!
+//! Send the magic packet either per IPv4 with `send_magic_packet_v4` or per IPv6 with
+//! `send_magic_packet_v6`. Therefore, the MAC address of the remote system is required. Use
+//! `parse_mac` to parse MAC address strings like "AB:CD:01:02:03:04".
 use std::net::UdpSocket;
 use std::net::{Ipv6Addr, Ipv4Addr};
 use std::net::ToSocketAddrs;
@@ -65,7 +69,7 @@ fn create_payload(mac: Vec<u8>) -> [u8; 17 * 6] {
     buf
 }
 
-// Creates the UdpSocket.
+/// Creates the UdpSocket.
 fn create_socket<A: ToSocketAddrs>(address: A) -> Result<UdpSocket, std::io::Error> {
     let socket = UdpSocket::bind(address).unwrap();
     socket.set_broadcast(true)?;
@@ -74,7 +78,6 @@ fn create_socket<A: ToSocketAddrs>(address: A) -> Result<UdpSocket, std::io::Err
 
 #[cfg(test)]
 mod tests {
-
     #[test]
     fn test_parse_mac() {
         assert_eq!(super::parse_mac("FF:FF:FF:FF:FF:FF".to_string()),
@@ -111,6 +114,6 @@ mod tests {
             0x00, 0x01, 0x02, 0x03, 0x04, 0x05];
         assert_eq!(payload.len(), result.len());
         assert!(payload.iter().zip(
-        result.iter()).all(|(a, b)| a == b));
+            result.iter()).all(|(a, b)| a == b));
     }
 }
