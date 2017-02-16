@@ -31,11 +31,32 @@ fn main() {
         print_usage(&program, opts);
         return;
     }
-    let macstr = matches.opt_str("mac").expect("no MAC address given");
-    let mac: Vec<u8> = wol::parse_mac(macstr).expect("parse error");
-    if matches.opt_present("4") {
-        wol::send_magic_packet_v4(mac).expect("Transmission error");
+    let mac_str = if !matches.free.is_empty() {
+        matches.free[0].clone()
     } else {
-        wol::send_magic_packet_v6(mac).expect("Transmission error");
+        println!("No MAC address given");
+        print_usage(&program, opts);
+        return;
+    };
+    let mac = wol::parse_mac(mac_str);
+    match mac {
+        Err(err) => {
+            println!("Error during parsing of MAC address: {}", err);
+            print_usage(&program, opts);
+            return;
+        },
+        Ok(mac) => if matches.opt_present("4") {
+            wol::send_magic_packet_v4(mac).unwrap_or_else(|err| {
+                println!("Error during sending: {}", err);
+                print_usage(&program, opts);
+                return;
+            });
+        } else {
+            wol::send_magic_packet_v6(mac).unwrap_or_else(|err| {
+                println!("Error during sending: {}", err);
+                print_usage(&program, opts);
+                return;
+            });
+        },
     }
 }

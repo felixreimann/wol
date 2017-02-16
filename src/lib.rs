@@ -7,6 +7,8 @@ use std::net::UdpSocket;
 use std::net::{Ipv6Addr, Ipv4Addr};
 use std::net::ToSocketAddrs;
 
+use std::fmt;
+
 /// Parses the MAC address from a given string.
 ///
 /// #Example
@@ -15,14 +17,58 @@ use std::net::ToSocketAddrs;
 /// let mac = wol::parse_mac("AA:FF:B0:12:34:56".to_string());
 /// assert_eq!(mac, Ok(vec![0xAA, 0xFF, 0xB0, 0x12, 0x34, 0x56]))
 /// ```
-pub fn parse_mac(mac: String) -> Result<Vec<u8>, &'static str> {
-    let vec: Vec<u8> = mac.split(':')
-        .map(|s| u8::from_str_radix(s, 16).expect(&format!("Not a hex number: {}", s)))
+pub fn parse_mac(mac: String) -> Result<Vec<u8>, ParseError> {
+    let vec: Result<Vec<u8>, std::num::ParseIntError> = mac.split(':')
+        .map(|s| u8::from_str_radix(s, 16))
         .collect();
-    if vec.len() == 6 {
-        Ok(vec)
-    } else {
-        Err("Illegal MAC address length.")
+    match vec {
+        Err(e) => Err(ParseError::Number(e)),
+        Ok(vec) => {
+            if vec.len() == 6 {
+                Ok(vec)
+            } else {
+                Err(ParseError::Length)
+            }
+        },
+    }
+}
+
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ParseError {
+    Number(std::num::ParseIntError),
+    Length,
+}
+
+impl std::error::Error for ParseError {
+    fn description(&self) -> &str {
+        match *self {
+            ParseError::Number(ref err) => err.description(),
+            ParseError::Length => "illegal MAC address length",
+        }
+    }
+
+    fn cause(&self) -> Option<&std::error::Error> {
+        match *self {
+            ParseError::Number(ref err) => Some(err),
+            ParseError::Length => None,
+        }
+    }
+}
+
+
+impl fmt::Display for ParseError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            ParseError::Number(ref err) => err.fmt(f),
+            ParseError::Length => write!(f, "illegal MAC address length"),
+        }
+    }
+}
+
+impl From<std::num::ParseIntError> for ParseError {
+    fn from(err: std::num::ParseIntError) -> ParseError {
+        ParseError::Number(err)
     }
 }
 
@@ -81,9 +127,9 @@ mod tests {
     #[test]
     fn test_parse_mac() {
         assert_eq!(super::parse_mac("FF:FF:FF:FF:FF:FF".to_string()),
-        Ok(vec![255, 255, 255, 255, 255, 255]));
+                   Ok(vec![255, 255, 255, 255, 255, 255]));
         assert_eq!(super::parse_mac("00:00:00:00:00:00".to_string()),
-        Ok(vec![0, 0, 0, 0, 0, 0]));
+                   Ok(vec![0, 0, 0, 0, 0, 0]));
     }
 
     #[test]
@@ -95,25 +141,18 @@ mod tests {
     #[test]
     fn test_create_payload() {
         let payload = super::create_payload(vec![0x00, 0x01, 0x02, 0x03, 0x04, 0x05]);
-        let result = [0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-            0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
-            0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
-            0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
-            0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
-            0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
-            0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
-            0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
-            0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
-            0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
-            0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
-            0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
-            0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
-            0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
-            0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
-            0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
-            0x00, 0x01, 0x02, 0x03, 0x04, 0x05];
+        let result = [0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
+                      0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
+                      0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
+                      0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
+                      0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
+                      0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
+                      0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
+                      0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
+                      0x00, 0x01, 0x02, 0x03, 0x04, 0x05];
         assert_eq!(payload.len(), result.len());
-        assert!(payload.iter().zip(
-            result.iter()).all(|(a, b)| a == b));
+        assert!(payload.iter()
+            .zip(result.iter())
+            .all(|(a, b)| a == b));
     }
 }
