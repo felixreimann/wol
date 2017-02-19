@@ -13,10 +13,6 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     let program = args[0].clone();
     let mut opts = Options::new();
-    opts.optopt("",
-                "mac",
-                "the MAC address of the remote system",
-                "00:00:00:00:00:00");
     opts.optflag("4", "ipv4", "use IPv4");
     opts.optflag("6", "ipv6", "use IPv6 (default)");
     opts.optflag("h", "help", "print this help menu");
@@ -38,6 +34,13 @@ fn main() {
         print_usage(&program, opts);
         return;
     };
+    let send_magic_packet =
+    if matches.opt_present("4") {
+        wol::send_magic_packet_v4
+    } else {
+        wol::send_magic_packet_v6
+    };
+
     let mac = wol::parse_mac(mac_str);
     match mac {
         Err(err) => {
@@ -45,18 +48,10 @@ fn main() {
             print_usage(&program, opts);
             return;
         },
-        Ok(mac) => if matches.opt_present("4") {
-            wol::send_magic_packet_v4(mac).unwrap_or_else(|err| {
-                println!("Error during sending: {}", err);
-                print_usage(&program, opts);
-                return;
-            });
-        } else {
-            wol::send_magic_packet_v6(mac).unwrap_or_else(|err| {
-                println!("Error during sending: {}", err);
-                print_usage(&program, opts);
-                return;
-            });
-        },
+        Ok(mac) => send_magic_packet(mac).unwrap_or_else(|err| {
+            println!("Error during sending: {}", err);
+            print_usage(&program, opts);
+            return;
+        }),
     }
 }
