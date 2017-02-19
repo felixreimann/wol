@@ -5,7 +5,7 @@ use getopts::Options;
 use std::env;
 
 fn print_usage(program: &str, opts: Options) {
-    let brief = format!("Usage: {} [-h] [-4|-6]  MAC", program);
+    let brief = format!("Usage: {} [-h] [-4|-6] MAC", program);
     print!("{}", opts.usage(&brief));
 }
 
