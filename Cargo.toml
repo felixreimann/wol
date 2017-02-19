@@ -1,7 +1,10 @@
 [package]
 name = "wol"
 version = "0.1.0"
-authors = ["Felix"]
+authors = ["Felix Reimann <felix@fex-it.de"]
+readme = "README.md"
+license = "MIT"
+description = "Wake up remote computers in the local network per Wake on LAN."
 
 [dependencies]
 getopts = "0.2"
@@ -9,3 +12,4 @@ getopts = "0.2"
 [[bin]]
 doc = false
 name = "wakeonlan"
+
