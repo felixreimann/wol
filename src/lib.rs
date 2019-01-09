@@ -133,8 +133,12 @@ mod tests {
     }
 
     #[test]
-    fn test_create_socket() {
+    fn test_create_socket_v4() {
         assert!(super::create_socket("127.0.0.1:0").is_ok());
+    }
+
+    #[test]
+    fn test_create_socket_v6() {
         assert!(super::create_socket("[::1]:0").is_ok());
     }
 
