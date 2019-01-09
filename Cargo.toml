@@ -8,8 +8,3 @@ description = "Wake up remote computers in the local network per Wake on LAN."
 
 [dependencies]
 getopts = "0.2"
-
-[[bin]]
-doc = false
-name = "wakeonlan"
-
